@@ -1,5 +1,5 @@
 class MerchantSerializer
-  include JSONAPI::ObjectSerializer
+  include JSONAPI::Serializer
   attributes :name
 
   has_many :items
