@@ -85,7 +85,8 @@ RSpec.describe 'Items API' do
   describe 'patch /api/v1/items/:id' do
     it 'can update an existing item' do
       @merchant = create(:merchant)
-      @item = create(:item, merchant_id: @merchant.id)
+      @merchant2 = create(:merchant)
+      @item = Item.create!(name: 'Banana', description: 'yellow and fresh', unit_price: 4.99, merchant_id: @merchant.id)
 
       item_details = {
         name: 'Updated Name',
@@ -104,6 +105,10 @@ RSpec.describe 'Items API' do
       expect(item[:data][:attributes][:description]).to eq('Updated Description')
       expect(item[:data][:attributes][:unit_price]).to eq(9.99)
       expect(item[:data][:attributes][:merchant_id]).to eq(@merchant.id)
+      expect(item[:data][:attributes][:name]).to_not eq('Banana')
+      expect(item[:data][:attributes][:description]).to_not eq('yellow and fresh')
+      expect(item[:data][:attributes][:unit_price]).to_not eq(4.99)
+      expect(item[:data][:attributes][:merchant_id]).to_not eq(@merchant2.id)
     end
   end
 
@@ -111,14 +116,33 @@ RSpec.describe 'Items API' do
     it 'can delete an existing item' do
       @merchant = create(:merchant)
       @item1 = create(:item, merchant_id: @merchant.id)
-      @item2 = create(:item, merchant_id: @merchant.id)
 
-      expect(Item.count).to eq(2)
+      expect(Item.count).to eq(1)
 
-      destroy "/api/v1/items/#{@item1.id}"
+      delete "/api/v1/items/#{@item1.id}"
 
       expect(response).to be_successful
-      expect(Item.count).to eq(1)
+      expect(Item.count).to eq(0)
+      expect{ Item.find(@item1.id) }.to raise_error(ActiveRecord::RecordNotFound)
     end
+  end
+
+  describe 'get /api/v1/items/:id/merchant' do
+    it 'can get the merchant for an item' do
+      @merchant = create(:merchant)
+      @item1 = create(:item, merchant_id: @merchant.id)
+
+      get "/api/v1/items/#{@item1.id}/merchants"
+
+      expect(response).to be_successful
+
+      merchant_data = JSON.parse(response.body, symbolize_names: true)
+
+      expect(merchant_data[:data][:attributes][:name]).to eq(@merchant.name)
+    end
+  end
+
+  describe 'get /api/v1/items/find' do 
+
   end
 end
