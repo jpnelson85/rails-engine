@@ -81,4 +81,44 @@ RSpec.describe 'Items API' do
       expect(item[:data][:attributes][:merchant_id]).to eq(@merchant.id)
     end
   end
+
+  describe 'patch /api/v1/items/:id' do
+    it 'can update an existing item' do
+      @merchant = create(:merchant)
+      @item = create(:item, merchant_id: @merchant.id)
+
+      item_details = {
+        name: 'Updated Name',
+        description: 'Updated Description',
+        unit_price: 9.99,
+        merchant_id: @merchant.id
+      }
+
+      patch "/api/v1/items/#{@item.id}", params: { item: item_details }
+
+      expect(response).to be_successful
+
+      item = JSON.parse(response.body, symbolize_names: true)
+
+      expect(item[:data][:attributes][:name]).to eq('Updated Name')
+      expect(item[:data][:attributes][:description]).to eq('Updated Description')
+      expect(item[:data][:attributes][:unit_price]).to eq(9.99)
+      expect(item[:data][:attributes][:merchant_id]).to eq(@merchant.id)
+    end
+  end
+
+  describe 'delete /api/v1/items/:id' do
+    it 'can delete an existing item' do
+      @merchant = create(:merchant)
+      @item1 = create(:item, merchant_id: @merchant.id)
+      @item2 = create(:item, merchant_id: @merchant.id)
+
+      expect(Item.count).to eq(2)
+
+      destroy "/api/v1/items/#{@item1.id}"
+
+      expect(response).to be_successful
+      expect(Item.count).to eq(1)
+    end
+  end
 end
